@@ -9,6 +9,10 @@ interface DocumentViewerProps {
   activeFieldKey: string | null;
   onSelectField: (key: string) => void;
   onClearSelection: () => void;
+  /** True when file bytes couldn't be restored after reload */
+  contentUnavailable?: boolean;
+  /** Called when the user clicks "Re-upload file" in the unavailable banner */
+  onReupload?: (file: File) => void;
   drawMode?: boolean;
   children?: React.ReactNode;
 }
@@ -19,17 +23,32 @@ export function DocumentViewer({
   activeFieldKey,
   onSelectField,
   onClearSelection,
+  contentUnavailable = false,
+  onReupload,
   drawMode = false,
   children,
 }: DocumentViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Hook handles PDF page 1 rendering to canvas
+  // Hook handles PDF page 1 rendering to canvas.
+  // url=null when file is an image or content is unavailable — hook is a no-op.
   const { loading: pdfLoading, error: pdfError } = usePdfRenderer({
     canvasRef,
-    url: file.kind === 'pdf' ? file.url : null,
+    url: file.kind === 'pdf' && !contentUnavailable ? file.url : null,
   });
+
+  // Handle the re-upload button click via a hidden file input
+  function handleReuploadClick() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.png,.jpg,.jpeg,.webp,image/*,application/pdf';
+    input.onchange = () => {
+      const chosen = input.files?.[0];
+      if (chosen && onReupload) onReupload(chosen);
+    };
+    input.click();
+  }
 
   return (
     <div className="flex flex-col h-full bg-neutral-100/70 border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm">
@@ -65,51 +84,81 @@ export function DocumentViewer({
           </div>
         )}
 
-        {pdfError && (
+        {/* PDF render error — only shown for genuine render failures, not unavailable content */}
+        {pdfError && !contentUnavailable && (
           <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg max-w-md my-8 text-center">
             {pdfError}
           </div>
         )}
 
-        {/* 
-          Page Wrapper:
-          Matches the rendered page dimensions exactly, enabling 
-          BoundingBoxOverlay to use normalized percentage positioning reliably.
-          Clicking the blank page area (not a box) clears the active selection.
-        */}
-        <div
-          className="relative inline-block max-w-full bg-white shadow-md rounded-lg overflow-hidden border border-neutral-200/80"
-          onClick={onClearSelection}
-        >
-          {file.kind === 'pdf' ? (
-            <canvas
-              ref={canvasRef}
-              className="block max-w-full h-auto object-contain"
-              aria-label="Rendered invoice PDF page 1"
-            />
-          ) : (
-            <img
-              src={file.url}
-              alt={file.name}
-              onLoad={() => setImageLoaded(true)}
-              className="block max-w-full h-auto object-contain select-none"
-              style={{ maxHeight: 'calc(100vh - 160px)' }}
-            />
-          )}
-
-          {/* Overlay bounding boxes */}
-          {(file.kind === 'pdf' ? !pdfLoading : imageLoaded) && (
-            <>
-              <BoundingBoxOverlay
-                fields={fields}
-                activeFieldKey={activeFieldKey}
-                onSelectField={onSelectField}
+        {/* Content unavailable banner — shown instead of the document */}
+        {contentUnavailable ? (
+          <div className="flex flex-col items-center justify-center gap-5 py-16 px-6 text-center max-w-sm mx-auto">
+            <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center">
+              <svg className="w-7 h-7 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-semibold text-neutral-800 text-sm mb-1">File content not available</p>
+              <p className="text-neutral-500 text-xs leading-relaxed">
+                Your review progress (fields, statuses, edits) is fully restored.
+                Re-upload the same file to see the document again.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleReuploadClick}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M10 3a.75.75 0 01.75.75v6.19l1.72-1.72a.75.75 0 111.06 1.06l-3 3a.75.75 0 01-1.06 0l-3-3a.75.75 0 011.06-1.06l1.72 1.72V3.75A.75.75 0 0110 3z" />
+                <path d="M3.75 13a.75.75 0 000 1.5h12.5a.75.75 0 000-1.5H3.75z" />
+              </svg>
+              Re-upload file
+            </button>
+          </div>
+        ) : (
+          /*
+            Page Wrapper:
+            Matches the rendered page dimensions exactly, enabling
+            BoundingBoxOverlay to use normalized percentage positioning reliably.
+            Clicking the blank page area (not a box) clears the active selection.
+          */
+          <div
+            className="relative inline-block max-w-full bg-white shadow-md rounded-lg overflow-hidden border border-neutral-200/80"
+            onClick={onClearSelection}
+          >
+            {file.kind === 'pdf' ? (
+              <canvas
+                ref={canvasRef}
+                className="block max-w-full h-auto object-contain"
+                aria-label="Rendered invoice PDF page 1"
               />
-              {/* Optional DrawLayer overlay when drawMode is active */}
-              {drawMode && children}
-            </>
-          )}
-        </div>
+            ) : (
+              <img
+                src={file.url}
+                alt={file.name}
+                onLoad={() => setImageLoaded(true)}
+                className="block max-w-full h-auto object-contain select-none"
+                style={{ maxHeight: 'calc(100vh - 160px)' }}
+              />
+            )}
+
+            {/* Overlay bounding boxes */}
+            {(file.kind === 'pdf' ? !pdfLoading : imageLoaded) && (
+              <>
+                <BoundingBoxOverlay
+                  fields={fields}
+                  activeFieldKey={activeFieldKey}
+                  onSelectField={onSelectField}
+                />
+                {/* Optional DrawLayer overlay when drawMode is active */}
+                {drawMode && children}
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
