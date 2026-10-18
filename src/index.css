@@ -2,20 +2,47 @@
 
 @layer base {
   :root {
+    --bg-canvas: #f8fafc;
+    --surface-card: #ffffff;
+    --surface-subtle: #f1f5f9;
+    --border-subtle: #e2e8f0;
+    --border-hover: #cbd5e1;
+    --border-accent: #6366f1;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+
+    /* Accent & Brand */
     --accent: #4f46e5;
     --accent-hover: #4338ca;
-    --bg-main: #f9fafb;
-    --surface: #ffffff;
-    --border-color: #e5e7eb;
-    --text-primary: #111827;
-    --text-secondary: #4b5563;
-    --text-muted: #6b7280;
+    --accent-light: #eef2ff;
+    --accent-ring: rgba(79, 70, 229, 0.2);
+
+    /* Status Colors */
+    --status-approved-bg: #ecfdf5;
+    --status-approved-text: #047857;
+    --status-approved-border: #a7f3d0;
+
+    --status-edited-bg: #fffbeb;
+    --status-edited-text: #b45309;
+    --status-edited-border: #fde68a;
+
+    --status-error-bg: #fef2f2;
+    --status-error-text: #b91c1c;
+    --status-error-border: #fecaca;
+
+    /* Elevation & Shadows */
+    --shadow-paper: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 12px 24px -4px rgba(0, 0, 0, 0.06);
+    --shadow-soft: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    --shadow-lift: 0 6px 16px -2px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
   }
 
   body {
-    background-color: var(--bg-main);
+    background-color: var(--bg-canvas);
     color: var(--text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
+    letter-spacing: -0.011em;
     margin: 0;
     padding: 0;
     min-height: 100vh;
@@ -23,15 +50,23 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  * {
-    box-sizing: border-box;
+  /* Tabular numbers for financial and timestamp data */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Dot grid background */
+/* Subtle dot grid pattern with radial edge fade */
 .dot-grid-pattern {
-  background-image: radial-gradient(#cbd5e1 1.25px, transparent 1.25px);
+  background-image: radial-gradient(rgba(148, 163, 184, 0.3) 1.25px, transparent 1.25px);
   background-size: 20px 20px;
+}
+
+.dot-grid-faded {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.3) 1.25px, transparent 1.25px);
+  background-size: 20px 20px;
+  mask-image: radial-gradient(ellipse 65% 55% at 50% 45%, black 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 45%, black 40%, transparent 100%);
 }
 
 /* Spotlight cursor glow card */
@@ -46,12 +81,12 @@
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    400px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
-    rgba(79, 70, 229, 0.08),
+    380px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
+    rgba(79, 70, 229, 0.06),
     transparent 70%
   );
   opacity: 0;
-  transition: opacity 250ms ease;
+  transition: opacity 200ms ease;
   pointer-events: none;
   border-radius: inherit;
 }
@@ -83,34 +118,76 @@
   content: '';
   position: absolute;
   inset: -2px;
-  background: linear-gradient(90deg, #4f46e5, #818cf8, #c084fc, #4f46e5);
+  background: linear-gradient(90deg, #4f46e5, #818cf8, #a855f7, #4f46e5);
   background-size: 300% 300%;
-  animation: movingBorder 3.5s linear infinite;
+  animation: movingBorder 4s linear infinite;
   border-radius: inherit;
   z-index: -1;
 }
 
-/* Subtle box pulse for active bounding box */
-@keyframes boxPulse {
-  0%, 100% {
-    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.4), inset 0 0 0 1px rgba(79, 70, 229, 0.3);
+/* Non-looping gentle single pulse when a bounding box is selected */
+@keyframes singleSelectPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.5), inset 0 0 0 1px rgba(79, 70, 229, 0.3);
   }
   50% {
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.65), inset 0 0 0 2px rgba(79, 70, 229, 0.5);
+    box-shadow: 0 0 0 5px rgba(79, 70, 229, 0.25), inset 0 0 0 1.5px rgba(79, 70, 229, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.35), inset 0 0 0 1px rgba(79, 70, 229, 0.4);
   }
 }
 
-.active-box-pulse {
-  animation: boxPulse 2s ease-in-out infinite;
+.box-select-once {
+  animation: singleSelectPulse 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Primary CTA Button 1px inner highlight */
+.btn-primary-tactile {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: transform 120ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.btn-primary-tactile:active {
+  transform: scale(0.98);
+}
+
+/* Shimmer sweep on hover (only on hover) */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.22),
+    transparent
+  );
+  transition: none;
+}
+
+.btn-shimmer:hover::after {
+  left: 140%;
+  transition: left 650ms ease-in-out;
 }
 
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .moving-border-active::after,
-  .active-box-pulse {
+  .box-select-once,
+  .btn-shimmer:hover::after {
     animation: none !important;
+    transition: none !important;
   }
-  
+
   *,
   *::before,
   *::after {
