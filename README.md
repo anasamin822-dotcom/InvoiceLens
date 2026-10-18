@@ -1,98 +1,128 @@
 # Invoice Review
 
-A browser-only React + TypeScript app for reviewing, approving, and editing extracted invoice fields with interactive document annotation.
+> **Demo mode — extraction is mocked.** No backend, OCR, or API keys required. Everything runs in the browser.
 
-> ⚠️ **Demo mode**: Extraction is mocked. No backend, OCR, or API keys are required.
+A browser-only React + TypeScript app for reviewing, approving, and editing extracted invoice fields with interactive document annotation.
 
 ---
 
 ## What It Does
 
-1. **Upload** a PDF, PNG, JPG, or WEBP invoice (drag-and-drop or file picker, max 10 MB).
-2. **View** the document with bounding-box overlays for each extracted field.
-3. **Click a box** on the document → activates the matching field card in the sidebar.
-4. **Click a card** → highlights and pulses the bounding box on the document.
-5. **Approve** a field value (one-click) or **edit** it inline with live validation.
-6. **Edit log** records every approval and change, newest first.
-7. **Draw new box** mode: drag a rectangle on the document and attach it to an existing field or create a custom one.
-8. **Export JSON** downloads the full reviewed fields + audit log.
-9. State is persisted to `localStorage` so refreshes don't lose your work.
+| Step | Action |
+|---|---|
+| 1 | **Upload** a PDF, PNG, JPG, or WEBP invoice (drag-and-drop or file picker, max 10 MB) |
+| 2 | **View** the document with colour-coded bounding-box overlays for each extracted field |
+| 3 | **Click a box** on the document → activates the matching field card in the right panel |
+| 4 | **Click a card** → highlights and pulses the bounding box on the document |
+| 5 | **Approve** a field value (one-click) or **Edit** it inline with live per-field validation |
+| 6 | **Audit log** records every approval and change, newest first, with timestamps |
+| 7 | **Draw new box** — drag a rectangle on the document, create a custom field or re-align an existing one |
+| 8 | **Export JSON** — downloads all reviewed fields + full audit log |
+| 9 | State is persisted to `localStorage` keyed by `filename:size` — refresh without losing work |
 
 ---
 
-## Screenshots
+## How to Run
 
-> _Add a screenshot or GIF here once the app is running._
+```bash
+npm install        # install dependencies
+npm run dev        # start dev server → http://localhost:5173
+npm run build      # production build (TypeScript strict + Vite)
+npm run test       # 41 unit tests via Vitest
+```
+
+---
+
+## Demo Mode
+
+Extraction is **fully mocked** — the app ships with three hardcoded fields:
+
+| Field | Mock Value | Document Position |
+|---|---|---|
+| Invoice Number | `INV-2041` | top-right |
+| Invoice Date | `2026-09-14` | just below invoice number |
+| Total Amount | `48,250.00` | bottom-right |
+
+The **sample invoice** (`public/sample-invoice.svg`) is hand-crafted so those three values appear exactly where the mock bounding boxes are, giving a realistic demo.
+
+Click **"Load sample invoice"** on the upload screen or in the toolbar to load it instantly.
+
+> When you upload your own document, the mock boxes will not align with the real text — the "Demo mode: extraction is mocked" banner in the viewer makes this explicit.
 
 ---
 
 ## Stack
 
-| Layer | Choice |
-|---|---|
-| Framework | React 18 + TypeScript (strict mode) |
-| Build tool | Vite 8 |
-| Styling | Tailwind CSS v4 |
-| PDF rendering | pdfjs-dist (page 1, canvas) |
-| State | `useReducer` + Context |
-| Tests | Vitest |
+| Layer | Choice | Reason |
+|---|---|---|
+| Framework | React 18 + TypeScript (strict) | Type-safe, component-based |
+| Build | Vite 8 | Fast HMR, first-class TS support |
+| Styling | Tailwind CSS v4 | Utility-first, zero runtime |
+| PDF rendering | pdfjs-dist (page 1, canvas) | Industry-standard browser PDF renderer |
+| State | `useReducer` + React Context | Pure reducer is trivially unit-testable; no Zustand needed at this scope |
+| Tests | Vitest | Vite-native, no config overhead |
 
 ---
 
-## Getting Started
+## Architecture
 
-```bash
-npm install
-npm run dev       # http://localhost:5173
-npm run build     # Production build
-npm run test      # Unit tests
+```
+src/
+├── types/          — shared TypeScript types (Field, BoundingBox, LogEntry, AppState)
+├── mock/           — mock field data with normalised bounding boxes
+├── store/
+│   ├── reducer.ts  — pure reducer (LOAD_FILE, APPROVE, EDIT, DRAW, …)
+│   └── context.tsx — React context + AppProvider wrapping useReducer
+├── lib/
+│   ├── coords.ts       — normalizedToPixel / pixelToNormalized helpers
+│   ├── validation.ts   — per-field validators (invoice number, ISO date, total)
+│   ├── formatting.ts   — timestamp → readable string, generateId
+│   └── export.ts       — build + trigger JSON download
+├── hooks/
+│   ├── usePdfRenderer.ts   — pdfjs-dist page-1 render to <canvas>
+│   └── useLocalStorage.ts  — persist/restore fields+log keyed by file name+size
+└── components/
+    ├── UploadZone.tsx        — drag-drop + file picker + validation
+    ├── DocumentViewer.tsx    — PDF canvas / <img> switcher + overlay host
+    ├── BoundingBoxOverlay.tsx— %-positioned boxes, active pulse, keyboard a11y
+    ├── DrawLayer.tsx         — pointer-driven rectangle draw + field assignment
+    ├── FieldPanel.tsx        — summary header + card list
+    ├── FieldCard.tsx         — status badge, spotlight glow, inline edit+approve
+    ├── EditLog.tsx           — timestamped audit log, newest-first
+    └── Toolbar.tsx           — file controls, draw toggle, export button
 ```
 
+**Key design decisions:**
+
+- **Percentage-based bounding boxes** — `left/top/width/height` as CSS `%` so boxes scale correctly on any container resize without JS.
+- **Pure reducer** — all state transitions are testable in isolation as a plain function; no side-effects in the reducer.
+- **No animation libraries** — all effects (moving border, box pulse, spotlight glow) use plain CSS `@keyframes` and custom properties; respects `prefers-reduced-motion`.
+- **pdfjs-dist v6 API** — `getDocument({ url })` object form; `render({ canvas, viewport })` canvas form (not deprecated `canvasContext`).
+
 ---
 
-## How Extraction Works
-
-Extraction is **fully mocked** — the app ships with three hardcoded fields:
-
-| Field | Mock Value | Bounding Box |
-|---|---|---|
-| Invoice Number | INV-2041 | top-right |
-| Invoice Date | 2026-09-14 | just below invoice number |
-| Total Amount | 48,250.00 | bottom-right |
-
-The **sample invoice** (`/public/sample-invoice.svg`) is hand-crafted so the three values appear exactly where the mock boxes are, for a realistic demo.
-
-### Plugging In a Real OCR / LLM Backend
+## Plugging In a Real OCR / LLM Backend
 
 1. Replace `src/mock/fields.ts` with an API call that returns `Field[]`.
-2. The `BoundingBox` coordinates should be returned as normalised values (0–1 relative to page width/height). Convert from pixel coordinates using `pixelToNormalized()` in `src/lib/coords.ts`.
-3. Wire the `usePdfRenderer` output dimensions to scale the boxes if your backend returns pixel values.
-
----
-
-## Design Decisions
-
-- **`useReducer` over Zustand** — state transitions are action-driven and easily unit-tested as a pure function.
-- **Percentage-based bounding boxes** — boxes are positioned with `left/top/width/height` as percentages so they scale correctly on any container resize without JavaScript.
-- **pdfjs-dist for PDF rendering** — renders page 1 to `<canvas>` at device pixel ratio, `<img>` for all image types.
-- **No Framer Motion** — all animations use CSS (`@keyframes`, `transition`), respecting `prefers-reduced-motion`.
-- **Spotlight hover glow** — achieved with a CSS custom property (`--mouse-x`, `--mouse-y`) set on `mousemove`, zero JS bundle cost.
+2. Bounding boxes must be **normalised** (0–1 relative to page width/height). Convert from pixel coordinates with `pixelToNormalized()` in `src/lib/coords.ts`.
+3. Wire the rendered page dimensions from `usePdfRenderer` if your backend returns pixel coordinates.
 
 ---
 
 ## Known Limitations
 
-- Single-page PDF only (page 1). Multi-page navigation is future work.
-- Mock bounding boxes will not align with an arbitrary uploaded invoice — the "Demo mode" banner makes this clear.
-- No real OCR/AI extraction — this is a UI scaffold.
+- **Single-page PDF** — only page 1 is rendered. Multi-page navigation is future work.
+- **Mock boxes** — won't align with an arbitrary uploaded invoice (banner warns the user).
+- **No real OCR** — this is a UI review scaffold.
 
 ---
 
-## What I'd Do Next
+## What I'd Do Next With More Time
 
-- Integrate a real OCR/LLM backend (e.g., Google Document AI, Amazon Textract, or a custom LLM pipeline) as a drop-in for `src/mock/fields.ts`.
-- Multi-page PDF navigation (prev/next page controls, page counter).
-- Confidence score on each extracted field.
-- Bulk approve-all button.
-- Dark mode.
-- CI workflow (GitHub Actions) running `npm run build` and `npm run test` on every PR.
+- Integrate a real OCR/LLM backend (Google Document AI, Amazon Textract, or a custom LLM pipeline).
+- Multi-page PDF navigation (prev/next, page counter).
+- Confidence score badge per extracted field.
+- Bulk "Approve All" button.
+- Dark mode toggle.
+- CI (GitHub Actions) running `npm run build` and `npm run test` on every PR.
+- Screenshot / GIF in this README.
