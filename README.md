@@ -28,8 +28,32 @@ A browser-only React + TypeScript app for reviewing, approving, and editing extr
 npm install        # install dependencies
 npm run dev        # start dev server → http://localhost:5173
 npm run build      # production build (TypeScript strict + Vite)
-npm run test       # 41 unit tests via Vitest
+npm run test       # 62 unit tests via Vitest
 ```
+
+---
+
+## UI Polish & Design System
+
+* **Style Name:** Linear-style calm dark-on-light productivity dashboard (Refero Styles inspired by Linear / Vercel).
+* **Color Palette:** Warm zinc/slate neutral surfaces (`#f8fafc`, `#ffffff`), deep slate text (`#0f172a`), indigo accent (`#4f46e5`), and semantic status colors:
+  * Approved: Emerald (`#047857`, `#ecfdf5`)
+  * Edited: Amber (`#b45309`, `#fffbeb`)
+  * Error: Red (`#b91c1c`, `#fef2f2`)
+* **Typography:** Inter with OpenType feature flags (`cv02`, `cv03`, `cv04`, `cv11`, `tnum` tabular numerics) for monetary and date alignment.
+* **Micro-interactions & Effects:**
+  * **Aceternity Moving Border:** Animated gradient border on upload hero dropzone.
+  * **Aceternity Spotlight Glow:** Smooth radial mouse-following illumination on hero cards.
+  * **Aceternity Dot Grid Background:** Faint radial dot grid fading out at the edges.
+  * **Aceternity-style Animated Progress Bar:** Thin calm progress indicator showing percentage of reviewed fields.
+  * **Paper Canvas & Floating Zoom Controls:** Soft layered elevation shadow on the document viewer with floating pill toolbar (+ / - / Reset 100%) keeping % coordinates perfectly aligned.
+  * **Single-pulse Bounding Box Select:** Non-looping subtle 350ms selection pulse.
+  * **Hover Shimmer CTA Button:** Tactile 1px inner highlight with hover shimmer on "Export JSON".
+  * **Non-blocking Toast:** Animated notification upon JSON export without blocking user interactions.
+  * **Mobile Slide-down Sheet:** 44px+ accessible touch targets and collapsible audit log on mobile devices (320px–390px).
+* **Credits & Attributions:**
+  * 3D Icons: CC0 from [3dicons.co](https://3dicons.co) (optimized vector SVG under 60KB).
+  * Design Patterns: Inspired by [Aceternity UI](https://ui.aceternity.com), [Refero Styles](https://refero.design), and [Footer.design](https://footer.design). Re-implemented with native React 19 + Tailwind CSS + CSS keyframes.
 
 ---
 
