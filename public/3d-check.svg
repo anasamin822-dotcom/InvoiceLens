@@ -1,0 +1,24 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3D checkmark badge illustration">
+  <defs>
+    <filter id="checkShadow" x="4" y="6" width="56" height="56" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#059669" flood-opacity="0.25" />
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#064E3B" flood-opacity="0.1" />
+    </filter>
+    <linearGradient id="checkCircle" x1="12" y1="10" x2="52" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="checkGleam" x1="16" y1="12" x2="48" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#checkShadow)">
+    <circle cx="32" cy="30" r="20" fill="url(#checkCircle)" />
+    <!-- 3D top shine ring -->
+    <ellipse cx="32" cy="22" rx="14" ry="7" fill="url(#checkGleam)" />
+    <!-- Checkmark path with 3D white stroke -->
+    <path d="M24 30.5L29.5 36L40 25.5" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+</svg>

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type DragEvent, type ChangeEvent } from 'react';
+import { useCallback, useRef, useState, type DragEvent, type ChangeEvent, type MouseEvent } from 'react';
 
 const ACCEPTED_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
 const ACCEPTED_EXTS = ['.pdf', '.png', '.jpg', '.jpeg', '.webp'];
@@ -17,6 +17,7 @@ export function UploadZone({ onFileAccepted, onLoadSample }: UploadZoneProps) {
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropzoneRef = useRef<HTMLDivElement>(null);
 
   const handleFile = useCallback(
     (file: File) => {
@@ -51,110 +52,142 @@ export function UploadZone({ onFileAccepted, onLoadSample }: UploadZoneProps) {
   const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleFile(file);
-    // Reset so the same file can be re-selected
     e.target.value = '';
   };
 
+  // Cursor-following spotlight glow effect
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (!dropzoneRef.current) return;
+    const rect = dropzoneRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    dropzoneRef.current.style.setProperty('--mouse-x', `${x}px`);
+    dropzoneRef.current.style.setProperty('--mouse-y', `${y}px`);
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-50 p-6">
-      {/* Dot-grid header background */}
+    <div className="relative min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden bg-slate-50/70">
+      {/* Aceternity-style dot grid background with radial edge fade */}
       <div
-        className="absolute inset-x-0 top-0 h-56 pointer-events-none"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle, #c7d2fe 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }}
+        className="absolute inset-0 dot-grid-faded pointer-events-none opacity-80"
         aria-hidden="true"
       />
 
-      <div className="relative z-10 text-center mb-8">
-        <div className="inline-flex items-center gap-2 mb-3">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <rect width="32" height="32" rx="8" fill="#4F46E5" />
-            <path d="M9 10h9l5 5v7a1 1 0 01-1 1H9a1 1 0 01-1-1V11a1 1 0 011-1z" fill="white" fillOpacity=".9" />
-            <path d="M18 10v5h5" stroke="white" strokeOpacity=".6" strokeWidth="1.5" />
-            <rect x="11" y="17" width="10" height="1.5" rx=".75" fill="white" fillOpacity=".7" />
-            <rect x="11" y="19.5" width="7" height="1.5" rx=".75" fill="white" fillOpacity=".7" />
-          </svg>
-          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">Invoice Review</h1>
+      {/* Hero Headline & Subtext */}
+      <div className="relative z-10 text-center max-w-xl mx-auto mb-8 sm:mb-10 px-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-neutral-200/80 shadow-xs mb-4 text-xs font-medium text-neutral-600">
+          <span className="w-2 h-2 rounded-full bg-indigo-600" aria-hidden="true" />
+          <span>Interactive Document Extraction</span>
+          <span className="text-neutral-300">|</span>
+          <span className="text-neutral-500">Offset Take-Home</span>
         </div>
-        <p className="text-neutral-500 text-sm">Upload an invoice to begin AI-assisted field extraction and review.</p>
+
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-900 tracking-tight leading-tight">
+          Verify &amp; audit invoice fields with confidence
+        </h1>
+        <p className="mt-2.5 text-sm sm:text-base text-neutral-500 max-w-md mx-auto leading-relaxed">
+          Upload any PDF or image to inspect bounding boxes, edit line items, and export structured JSON.
+        </p>
       </div>
 
-      {/* Drop zone with animated border when active */}
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label="Upload invoice — drag and drop or click to browse"
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onClick={() => inputRef.current?.click()}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click();
-        }}
-        className={[
-          'relative z-10 w-full max-w-lg rounded-2xl border-2 border-dashed cursor-pointer',
-          'flex flex-col items-center justify-center gap-4 py-14 px-8',
-          'transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2',
-          dragging
-            ? 'border-indigo-500 bg-indigo-50 scale-[1.01]'
-            : 'border-neutral-300 bg-white hover:border-indigo-400 hover:bg-indigo-50/30',
-          // Moving border on the upload zone button
-          'upload-zone-moving-border',
-        ].join(' ')}
-      >
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-          <rect width="48" height="48" rx="12" fill={dragging ? '#EEF2FF' : '#F5F3FF'} />
-          <path
-            d="M16 30V32a2 2 0 002 2h12a2 2 0 002-2v-2M24 14v14M18 20l6-6 6 6"
-            stroke="#4F46E5"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+      {/* Drag & Drop Zone with Spotlight + Moving Border */}
+      <div className="relative z-10 w-full max-w-md sm:max-w-lg">
+        <div
+          ref={dropzoneRef}
+          role="button"
+          tabIndex={0}
+          aria-label="Upload invoice — drag and drop or click to browse"
+          onMouseMove={handleMouseMove}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onClick={() => inputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click();
+          }}
+          className={[
+            'spotlight-card moving-border-active relative rounded-2xl p-8 sm:p-10 cursor-pointer shadow-sm transition-all duration-200 select-none',
+            'border border-neutral-200/90 flex flex-col items-center justify-center text-center',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2',
+            dragging
+              ? 'bg-indigo-50/70 scale-[1.01] border-indigo-500'
+              : 'bg-white hover:shadow-md hover:border-neutral-300',
+          ].join(' ')}
+        >
+          {/* CC0 3D Icon illustration stack */}
+          <div className="relative w-24 h-24 mb-4 flex items-center justify-center pointer-events-none">
+            <img
+              src="/3d-doc.svg"
+              alt="3D Document"
+              width="88"
+              height="88"
+              className="drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="absolute -bottom-1 -right-1">
+              <img
+                src="/3d-check.svg"
+                alt="3D Approved checkmark"
+                width="36"
+                height="36"
+                className="drop-shadow-md"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="font-semibold text-neutral-900 text-base sm:text-lg">
+              {dragging ? 'Drop invoice to begin' : 'Drag & drop invoice file'}
+            </p>
+            <p className="text-xs sm:text-sm text-neutral-500">
+              or <span className="text-indigo-600 font-medium hover:underline underline-offset-2">browse files from computer</span>
+            </p>
+            <p className="text-[11px] text-neutral-400 pt-1 font-mono">
+              PDF, PNG, JPG, or WEBP &middot; Up to 10 MB
+            </p>
+          </div>
+
+          <input
+            ref={inputRef}
+            type="file"
+            accept={ACCEPTED_EXTS.join(',')}
+            className="sr-only"
+            aria-hidden="true"
+            onChange={onInputChange}
           />
-        </svg>
-
-        <div className="text-center">
-          <p className="font-semibold text-neutral-800 text-base">
-            {dragging ? 'Drop it here!' : 'Drag & drop your invoice'}
-          </p>
-          <p className="text-sm text-neutral-500 mt-1">
-            or <span className="text-indigo-600 font-medium underline underline-offset-2">browse files</span>
-          </p>
-          <p className="text-xs text-neutral-400 mt-2">PDF · PNG · JPG · WEBP — max 10 MB</p>
         </div>
-
-        <input
-          ref={inputRef}
-          type="file"
-          accept={ACCEPTED_EXTS.join(',')}
-          className="sr-only"
-          aria-hidden="true"
-          onChange={onInputChange}
-        />
       </div>
 
       {error && (
-        <p
+        <div
           role="alert"
-          className="mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2 max-w-lg w-full text-center"
+          className="relative z-10 mt-4 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-2.5 max-w-md w-full text-center shadow-xs"
         >
           {error}
-        </p>
+        </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => {
-          setError(null);
-          onLoadSample();
-        }}
-        className="relative z-10 mt-6 text-sm text-indigo-600 hover:text-indigo-800 underline underline-offset-2 transition-colors duration-150 cursor-pointer"
-      >
-        Load sample invoice
-      </button>
+      {/* Load Sample Invoice Quick Action */}
+      <div className="relative z-10 mt-6 flex flex-col items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            onLoadSample();
+          }}
+          className="btn-primary-tactile inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold text-neutral-700 bg-white hover:bg-neutral-50 hover:text-indigo-600 border border-neutral-200/90 shadow-xs cursor-pointer min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+          <span>Load sample pre-aligned invoice</span>
+        </button>
+        <span className="text-[11px] text-neutral-400">
+          Try the demo document without uploading your own file
+        </span>
+      </div>
     </div>
   );
 }
