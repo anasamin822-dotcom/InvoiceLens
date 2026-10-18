@@ -13,6 +13,12 @@ export function usePdfRenderer({ canvasRef, url }: UsePdfRendererOptions) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Clear any previous error whenever the URL changes (incl. switching to null
+  // when the viewer shows an image instead of a PDF).
+  useEffect(() => {
+    setError(null);
+  }, [url]);
+
   useEffect(() => {
     if (!url || !canvasRef.current) return;
 
@@ -54,7 +60,16 @@ export function usePdfRenderer({ canvasRef, url }: UsePdfRendererOptions) {
         if (!isMounted) return;
         // RenderingCancelledException is expected on teardown — ignore it
         if (err instanceof Error && err.name === 'RenderingCancelledException') return;
-        console.error('PDF render error:', err);
+
+        // pdfjs throws both Error instances and plain objects with a message property
+        const msg = err instanceof Error
+          ? err.message
+          : (err != null && typeof (err as Record<string, unknown>).message === 'string'
+              ? (err as Record<string, unknown>).message as string
+              : String(err));
+        const stack = err instanceof Error ? err.stack : undefined;
+        console.error('PDF render error:', msg, stack ?? '');
+
         setError('Failed to render PDF. Ensure the file is a valid PDF.');
       } finally {
         if (isMounted) setLoading(false);
