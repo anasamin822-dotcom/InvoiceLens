@@ -21,6 +21,6 @@ export const MOCK_FIELDS: Field[] = [
     label: 'Total Amount',
     value: '48,250.00',
     status: 'pending',
-    box: { x: 0.58, y: 0.82, w: 0.24, h: 0.04 },
+    box: { x: 0.58, y: 0.824, w: 0.24, h: 0.04 },
   },
 ];

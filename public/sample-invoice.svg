@@ -110,10 +110,12 @@
     <line x1="440" y1="80" x2="680" y2="80" stroke="#e2e8f0" stroke-width="1" />
   </g>
 
-  <!-- Total Amount Area (y: 0.82 * 1100 = 902, x: 0.58 * 800 = 464, w: 192, h: 44) -->
-  <text x="380" y="930" class="bold" font-size="16" fill="#1e293b">Total Due (USD)</text>
-  <rect x="464" y="902" width="192" height="44" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
-  <text x="478" y="931" class="bold mono" font-size="20" fill="#4f46e5">48,250.00</text>
+  <!-- Total Amount Area -->
+  <!-- Label above the value box -->
+  <text x="380" y="896" class="bold" font-size="16" fill="#1e293b">Total Due (USD)</text>
+  <!-- Value box: y=907 → box y=907/1100≈0.825, mock box y updated to match -->
+  <rect x="464" y="907" width="192" height="44" rx="4" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5" />
+  <text x="478" y="936" class="bold mono" font-size="20" fill="#4f46e5">48,250.00</text>
 
   <!-- Footer Notes & Bank Details -->
   <g transform="translate(60, 1000)">
