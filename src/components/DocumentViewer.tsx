@@ -8,6 +8,7 @@ interface DocumentViewerProps {
   fields: Field[];
   activeFieldKey: string | null;
   onSelectField: (key: string) => void;
+  onClearSelection: () => void;
   drawMode?: boolean;
   children?: React.ReactNode;
 }
@@ -17,6 +18,7 @@ export function DocumentViewer({
   fields,
   activeFieldKey,
   onSelectField,
+  onClearSelection,
   drawMode = false,
   children,
 }: DocumentViewerProps) {
@@ -73,8 +75,12 @@ export function DocumentViewer({
           Page Wrapper:
           Matches the rendered page dimensions exactly, enabling 
           BoundingBoxOverlay to use normalized percentage positioning reliably.
+          Clicking the blank page area (not a box) clears the active selection.
         */}
-        <div className="relative inline-block max-w-full bg-white shadow-md rounded-lg overflow-hidden border border-neutral-200/80">
+        <div
+          className="relative inline-block max-w-full bg-white shadow-md rounded-lg overflow-hidden border border-neutral-200/80"
+          onClick={onClearSelection}
+        >
           {file.kind === 'pdf' ? (
             <canvas
               ref={canvasRef}
