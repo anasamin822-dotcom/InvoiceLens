@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { AppState, Field, LoadedFile, LogEntry } from '../types';
+import { loadFileContent } from '../lib/fileStorage';
 
 interface SavedSession {
   fields: Field[];
@@ -12,40 +13,65 @@ function sessionKey(file: { name: string; size: number }) {
   return `invoice_review:${file.name}:${file.size}`;
 }
 
+/** True for static paths (sample SVG and any /…path) that survive reloads as-is */
+function isStaticUrl(url: string): boolean {
+  return !url.startsWith('blob:') && !url.startsWith('data:');
+}
+
 /**
- * On mount, reads the last-opened file descriptor and saved session from
- * localStorage and calls onRestoreLastSession so the app can re-load
- * without the user having to re-upload.
+ * On mount, restores the last-opened session from storage.
  *
- * While a file is open, persists fields + log on every change.
+ * For static URLs (e.g. the sample SVG): restore directly.
+ * For blob: URLs: attempt to re-hydrate file bytes from fileStorage;
+ *   - on success: call onRestoreLastSession with a new object-URL
+ *   - on failure: call onRestoreLastSession with the dead blob URL (viewer will
+ *     detect and signal content unavailable) and pass contentUnavailable=true
+ *
+ * While open, persists fields + log on every change.
  */
 export function useLocalStoragePersistence(
   file: AppState['file'],
   fields: Field[],
   log: LogEntry[],
-  onRestoreLastSession: (file: LoadedFile, saved: SavedSession) => void,
+  onRestoreLastSession: (file: LoadedFile, saved: SavedSession, contentUnavailable: boolean) => void,
 ) {
   // ── Mount: restore last session ──────────────────────────────────────────
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LAST_FILE_KEY);
-      if (!raw) return;
-      const lastFile = JSON.parse(raw) as LoadedFile;
+    async function tryRestore() {
+      try {
+        const raw = localStorage.getItem(LAST_FILE_KEY);
+        if (!raw) return;
+        const lastFile = JSON.parse(raw) as LoadedFile;
 
-      // For blob: URLs we can't reconstruct the object URL after a reload,
-      // but for the sample SVG (static path) and any file whose URL is a
-      // static path we can. Blob URLs will just show a broken image, which
-      // is acceptable — the review state (fields/log) is still restored.
-      const key = sessionKey(lastFile);
-      const savedRaw = localStorage.getItem(key);
-      if (!savedRaw) return;
-      const saved = JSON.parse(savedRaw) as SavedSession;
-      if (Array.isArray(saved.fields) && Array.isArray(saved.log)) {
-        onRestoreLastSession(lastFile, saved);
+        const key = sessionKey(lastFile);
+        const savedRaw = localStorage.getItem(key);
+        if (!savedRaw) return;
+        const saved = JSON.parse(savedRaw) as SavedSession;
+        if (!Array.isArray(saved.fields) || !Array.isArray(saved.log)) return;
+
+        if (isStaticUrl(lastFile.url)) {
+          // Static URL always works — restore directly
+          onRestoreLastSession(lastFile, saved, false);
+          return;
+        }
+
+        // Blob URL — attempt to re-hydrate from fileStorage
+        const buffer = await loadFileContent(lastFile.name, lastFile.size);
+        if (buffer) {
+          const mimeType = lastFile.kind === 'pdf' ? 'application/pdf' : 'image/*';
+          const blob = new Blob([buffer], { type: mimeType });
+          const newUrl = URL.createObjectURL(blob);
+          onRestoreLastSession({ ...lastFile, url: newUrl }, saved, false);
+        } else {
+          // Content not available — restore review state but flag the viewer
+          onRestoreLastSession(lastFile, saved, true);
+        }
+      } catch {
+        // Silently ignore corrupt storage
       }
-    } catch {
-      // Silently ignore corrupt storage
     }
+
+    tryRestore();
     // Run once on mount only
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
