@@ -138,7 +138,7 @@ function InvoiceApp() {
 
         <main className="flex-1 flex flex-col lg:flex-row gap-4 sm:gap-5 p-3 sm:p-5 max-w-[1600px] mx-auto w-full">
           <section
-            className="flex-1 lg:w-[62%] min-h-[460px] lg:min-h-0"
+            className="flex-1 lg:w-[62%] min-h-[460px] lg:h-[calc(100vh-8.5rem)]"
             aria-label="Document viewer"
           >
             <DocumentViewer
@@ -163,7 +163,7 @@ function InvoiceApp() {
           </section>
 
           <aside
-            className="w-full lg:w-[38%] flex flex-col gap-4"
+            className="w-full lg:w-[38%] flex flex-col gap-4 lg:max-h-[calc(100vh-8.5rem)] lg:overflow-y-auto"
             aria-label="Review panel"
           >
             <div className="bg-white border border-neutral-200/80 rounded-2xl p-4 shadow-2xs">

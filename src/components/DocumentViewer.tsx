@@ -52,6 +52,7 @@ export function DocumentViewer({
   const { loading: pdfLoading, error: pdfError } = usePdfRenderer({
     canvasRef,
     url: file.kind === 'pdf' && !contentUnavailable ? file.url : null,
+    zoom: currentZoom,
   });
 
   // Handle the re-upload button click via a hidden file input
@@ -141,8 +142,8 @@ export function DocumentViewer({
           */
           <div
             style={{
-              width: currentZoom === 1.0 ? '100%' : `${Math.round(currentZoom * 100)}%`,
-              maxWidth: currentZoom === 1.0 ? '100%' : 'none',
+              width: file.kind === 'pdf' ? 'auto' : (currentZoom === 1.0 ? '100%' : `${Math.round(currentZoom * 100)}%`),
+              maxWidth: file.kind === 'pdf' ? 'none' : (currentZoom === 1.0 ? '100%' : 'none'),
             }}
             className="relative inline-block bg-white rounded-lg overflow-hidden border border-neutral-200/90 transition-all duration-150 shrink-0"
             style-custom="shadow-paper"
@@ -151,7 +152,7 @@ export function DocumentViewer({
             {file.kind === 'pdf' ? (
               <canvas
                 ref={canvasRef}
-                className="block w-full h-auto object-contain"
+                className="block max-w-none object-contain"
                 aria-label="Rendered invoice PDF page 1"
               />
             ) : (

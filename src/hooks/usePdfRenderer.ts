@@ -7,9 +7,10 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 interface UsePdfRendererOptions {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   url: string | null;
+  zoom?: number;
 }
 
-export function usePdfRenderer({ canvasRef, url }: UsePdfRendererOptions) {
+export function usePdfRenderer({ canvasRef, url, zoom = 1.0 }: UsePdfRendererOptions) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,8 +44,9 @@ export function usePdfRenderer({ canvasRef, url }: UsePdfRendererOptions) {
 
         const initialViewport = page.getViewport({ scale: 1.0 });
         const dpr = window.devicePixelRatio || 1;
-        // Scale to max 1000px wide CSS, rendered at device pixel ratio
-        const cssWidth = Math.min(initialViewport.width, 1000);
+        // Base width max 1000px CSS at 100%, scaled proportionally by zoom factor
+        const baseCssWidth = Math.min(initialViewport.width, 1000);
+        const cssWidth = Math.round(baseCssWidth * zoom);
         const scale = (cssWidth / initialViewport.width) * dpr;
         const viewport = page.getViewport({ scale });
 
@@ -86,7 +88,7 @@ export function usePdfRenderer({ canvasRef, url }: UsePdfRendererOptions) {
         // ignore
       }
     };
-  }, [url, canvasRef]);
+  }, [url, canvasRef, zoom]);
 
   return { loading, error };
 }
