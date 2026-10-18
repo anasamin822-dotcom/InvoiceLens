@@ -54,7 +54,7 @@ export function BoundingBoxOverlay({
                 ? [
                     // Custom (user-drawn) boxes: dashed purple border, purple fill
                     isActive
-                      ? 'border-2 border-dashed border-purple-600 bg-purple-500/20 active-box-pulse z-20 focus-visible:ring-purple-600'
+                      ? 'border-2 border-dashed border-purple-600 bg-purple-500/20 box-select-custom-once z-20 focus-visible:ring-purple-600'
                       : hasActiveField
                         ? 'border border-dashed border-purple-400/60 bg-purple-50/10 opacity-50 hover:opacity-100 hover:border-purple-500 z-10 focus-visible:ring-purple-500'
                         : 'border border-dashed border-purple-500/80 bg-purple-500/10 hover:bg-purple-500/20 hover:border-purple-600 z-10 focus-visible:ring-purple-500',
@@ -62,7 +62,7 @@ export function BoundingBoxOverlay({
                 : [
                     // Extracted (mock) boxes: solid indigo border, indigo fill
                     isActive
-                      ? 'border-2 border-indigo-600 bg-indigo-500/20 active-box-pulse z-20 focus-visible:ring-indigo-600'
+                      ? 'border-2 border-indigo-600 bg-indigo-500/20 box-select-once z-20 focus-visible:ring-indigo-600'
                       : hasActiveField
                         ? 'border border-indigo-300/60 bg-indigo-50/10 opacity-50 hover:opacity-100 hover:border-indigo-500 z-10 focus-visible:ring-indigo-500'
                         : 'border border-indigo-400/80 bg-indigo-500/10 hover:bg-indigo-500/20 hover:border-indigo-600 z-10 focus-visible:ring-indigo-500',

@@ -56,4 +56,38 @@ describe('pixelToNormalized', () => {
     expect(roundTrip.w).toBeCloseTo(box.w, 10);
     expect(roundTrip.h).toBeCloseTo(box.h, 10);
   });
+
+  it('produces identical normalized coordinates when container is zoomed', () => {
+    const baseW = 800;
+    const baseH = 1000;
+    const targetBox = { x: 0.15, y: 0.25, w: 0.35, h: 0.1 };
+
+    // At 1.0x zoom
+    const px1 = normalizedToPixel(targetBox, baseW, baseH);
+    const norm1 = pixelToNormalized(px1.left, px1.top, px1.width, px1.height, baseW, baseH);
+
+    // At 1.5x zoom (rendered container dimensions and drawn pixels both scale by 1.5x)
+    const zoom = 1.5;
+    const zoomedW = baseW * zoom;
+    const zoomedH = baseH * zoom;
+    const pxZoomed = {
+      left: px1.left * zoom,
+      top: px1.top * zoom,
+      width: px1.width * zoom,
+      height: px1.height * zoom,
+    };
+    const normZoomed = pixelToNormalized(
+      pxZoomed.left,
+      pxZoomed.top,
+      pxZoomed.width,
+      pxZoomed.height,
+      zoomedW,
+      zoomedH,
+    );
+
+    expect(normZoomed.x).toBeCloseTo(norm1.x, 10);
+    expect(normZoomed.y).toBeCloseTo(norm1.y, 10);
+    expect(normZoomed.w).toBeCloseTo(norm1.w, 10);
+    expect(normZoomed.h).toBeCloseTo(norm1.h, 10);
+  });
 });

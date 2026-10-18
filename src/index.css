@@ -138,8 +138,24 @@
   }
 }
 
+@keyframes customSelectPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.5), inset 0 0 0 1px rgba(147, 51, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(147, 51, 234, 0.25), inset 0 0 0 1.5px rgba(147, 51, 234, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.35), inset 0 0 0 1px rgba(147, 51, 234, 0.4);
+  }
+}
+
 .box-select-once {
   animation: singleSelectPulse 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.box-select-custom-once {
+  animation: customSelectPulse 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Primary CTA Button 1px inner highlight */
