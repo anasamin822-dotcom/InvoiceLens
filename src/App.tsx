@@ -9,18 +9,21 @@ import { Toolbar } from './components/Toolbar';
 import { DrawLayer } from './components/DrawLayer';
 import { exportReviewJson } from './lib/export';
 import { useLocalStoragePersistence } from './hooks/useLocalStorage';
+import { saveFileContent } from './lib/fileStorage';
 import type { Field, LogEntry, BoundingBox, LoadedFile } from './types';
 
 function InvoiceApp() {
   const { state, dispatch } = useAppState();
 
-  // Restore last session on mount
+  // ── Session restore ────────────────────────────────────────────────────────
   const handleRestoreLastSession = useCallback(
-    (file: LoadedFile, saved: { fields: Field[]; log: LogEntry[] }) => {
+    (file: LoadedFile, saved: { fields: Field[]; log: LogEntry[] }, contentUnavailable: boolean) => {
       dispatch({ type: 'LOAD_FILE', payload: file });
-      // Use a microtask so LOAD_FILE sets the file first, then we patch fields+log
       queueMicrotask(() => {
         dispatch({ type: 'RESTORE_SESSION', payload: { fields: saved.fields, log: saved.log } });
+        if (contentUnavailable) {
+          dispatch({ type: 'SET_CONTENT_UNAVAILABLE' });
+        }
       });
     },
     [dispatch],
@@ -28,7 +31,7 @@ function InvoiceApp() {
 
   useLocalStoragePersistence(state.file, state.fields, state.log, handleRestoreLastSession);
 
-  // Global Escape key → clear active field selection
+  // ── Global Escape key → clear active field selection ───────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -39,16 +42,24 @@ function InvoiceApp() {
     return () => window.removeEventListener('keydown', handler);
   }, [dispatch]);
 
-  const handleFileAccepted = useCallback(
-    (file: File) => {
+  // ── File upload handlers ───────────────────────────────────────────────────
+  const saveAndDispatch = useCallback(
+    async (file: File) => {
       const url = URL.createObjectURL(file);
       const kind = file.type === 'application/pdf' ? 'pdf' : 'image';
       dispatch({
         type: 'LOAD_FILE',
         payload: { name: file.name, url, kind, size: file.size },
       });
+      // Persist file bytes for reload recovery (best-effort, don't await in hot path)
+      file.arrayBuffer().then((buf) => saveFileContent(file.name, file.size, buf)).catch(() => {});
     },
     [dispatch],
+  );
+
+  const handleFileAccepted = useCallback(
+    (file: File) => { saveAndDispatch(file); },
+    [saveAndDispatch],
   );
 
   const handleLoadSample = useCallback(() => {
@@ -56,15 +67,8 @@ function InvoiceApp() {
   }, [dispatch]);
 
   const handleReplaceFile = useCallback(
-    (file: File) => {
-      const url = URL.createObjectURL(file);
-      const kind = file.type === 'application/pdf' ? 'pdf' : 'image';
-      dispatch({
-        type: 'LOAD_FILE',
-        payload: { name: file.name, url, kind, size: file.size },
-      });
-    },
-    [dispatch],
+    (file: File) => { saveAndDispatch(file); },
+    [saveAndDispatch],
   );
 
   const handleAddCustomField = useCallback(
@@ -81,7 +85,7 @@ function InvoiceApp() {
     [dispatch],
   );
 
-  // No file loaded yet — show upload screen
+  // ── Render ────────────────────────────────────────────────────────────────
   if (!state.file) {
     return (
       <UploadZone
@@ -92,10 +96,7 @@ function InvoiceApp() {
   }
 
   return (
-    <div
-      className="min-h-screen bg-neutral-50 flex flex-col"
-    >
-      {/* Sticky top toolbar */}
+    <div className="min-h-screen bg-neutral-50 flex flex-col">
       <Toolbar
         fileName={state.file.name}
         drawMode={state.drawMode}
@@ -105,9 +106,7 @@ function InvoiceApp() {
         onLoadSample={handleLoadSample}
       />
 
-      {/* Main layout: viewer (left ~60%) + panel (right ~40%) */}
       <main className="flex-1 flex flex-col lg:flex-row gap-4 p-4 sm:p-5 max-w-[1600px] mx-auto w-full">
-        {/* Document Viewer */}
         <section
           className="flex-1 lg:w-[62%] min-h-[400px] lg:min-h-0"
           aria-label="Document viewer"
@@ -116,12 +115,10 @@ function InvoiceApp() {
             file={state.file}
             fields={state.fields}
             activeFieldKey={state.activeFieldKey}
-            onSelectField={(key) =>
-              dispatch({ type: 'SET_ACTIVE', payload: key })
-            }
-            onClearSelection={() =>
-              dispatch({ type: 'SET_ACTIVE', payload: null })
-            }
+            onSelectField={(key) => dispatch({ type: 'SET_ACTIVE', payload: key })}
+            onClearSelection={() => dispatch({ type: 'SET_ACTIVE', payload: null })}
+            contentUnavailable={state.contentUnavailable}
+            onReupload={handleReplaceFile}
             drawMode={state.drawMode}
           >
             {state.drawMode && (
@@ -135,32 +132,20 @@ function InvoiceApp() {
           </DocumentViewer>
         </section>
 
-        {/* Right sidebar: Field Panel + Edit Log */}
         <aside
           className="w-full lg:w-[38%] flex flex-col gap-4"
           aria-label="Review panel"
         >
-          {/* Field cards */}
           <div className="bg-white border border-neutral-200/80 rounded-2xl p-4 shadow-sm">
             <FieldPanel
               fields={state.fields}
               activeFieldKey={state.activeFieldKey}
-              onSelectField={(key) =>
-                dispatch({ type: 'SET_ACTIVE', payload: key })
-              }
-              onApproveField={(key) =>
-                dispatch({ type: 'APPROVE_FIELD', payload: { key } })
-              }
-              onEditField={(key, newValue) =>
-                dispatch({ type: 'EDIT_FIELD', payload: { key, newValue } })
-              }
-              onDeleteCustomField={(key) =>
-                dispatch({ type: 'DELETE_CUSTOM_FIELD', payload: { key } })
-              }
+              onSelectField={(key) => dispatch({ type: 'SET_ACTIVE', payload: key })}
+              onApproveField={(key) => dispatch({ type: 'APPROVE_FIELD', payload: { key } })}
+              onEditField={(key, newValue) => dispatch({ type: 'EDIT_FIELD', payload: { key, newValue } })}
+              onDeleteCustomField={(key) => dispatch({ type: 'DELETE_CUSTOM_FIELD', payload: { key } })}
             />
           </div>
-
-          {/* Edit log — always visible */}
           <EditLog entries={state.log} />
         </aside>
       </main>
