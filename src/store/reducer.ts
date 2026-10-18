@@ -18,7 +18,8 @@ export type Action =
       payload: { key: string; label: string; value: string; box: Field['box'] };
     }
   | { type: 'DELETE_CUSTOM_FIELD'; payload: { key: string } }
-  | { type: 'UPDATE_BOX'; payload: { key: string; box: Field['box'] } };
+  | { type: 'UPDATE_BOX'; payload: { key: string; box: Field['box'] } }
+  | { type: 'RESTORE_SESSION'; payload: { fields: Field[]; log: LogEntry[] } };
 
 // ---------------------------------------------------------------------------
 // Initial state
@@ -39,6 +40,12 @@ export const INITIAL_STATE: AppState = {
 export function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'LOAD_FILE': {
+      // Persist the last-opened file descriptor so page reload can restore it
+      try {
+        if (action.payload) {
+          localStorage.setItem('invoice_review:last_file', JSON.stringify(action.payload));
+        }
+      } catch { /* ignore */ }
       return {
         ...INITIAL_STATE,
         file: action.payload,
@@ -47,14 +54,19 @@ export function appReducer(state: AppState, action: Action): AppState {
     }
 
     case 'LOAD_SAMPLE': {
+      const sampleFile = {
+        name: 'sample-invoice.svg',
+        url: '/sample-invoice.svg',
+        kind: 'image' as const,
+        size: 0,
+      };
+      // Track sample as last opened file too
+      try {
+        localStorage.setItem('invoice_review:last_file', JSON.stringify(sampleFile));
+      } catch { /* ignore */ }
       return {
         ...INITIAL_STATE,
-        file: {
-          name: 'sample-invoice.svg',
-          url: '/sample-invoice.svg',
-          kind: 'image',
-          size: 0,
-        },
+        file: sampleFile,
         fields: MOCK_FIELDS.map((f) => ({ ...f })),
       };
     }
@@ -168,6 +180,15 @@ export function appReducer(state: AppState, action: Action): AppState {
         fields: state.fields.map((f) =>
           f.key === action.payload.key ? { ...f, box: action.payload.box } : f,
         ),
+      };
+    }
+
+    case 'RESTORE_SESSION': {
+      // Atomically replace fields + log; used on page reload to recover saved work
+      return {
+        ...state,
+        fields: action.payload.fields,
+        log: action.payload.log,
       };
     }
 
