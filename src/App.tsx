@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import './index.css';
 import { AppProvider, useAppState } from './store/context';
 import { UploadZone } from './components/UploadZone';
@@ -9,46 +9,35 @@ import { Toolbar } from './components/Toolbar';
 import { DrawLayer } from './components/DrawLayer';
 import { exportReviewJson } from './lib/export';
 import { useLocalStoragePersistence } from './hooks/useLocalStorage';
-import type { Field, LogEntry, BoundingBox } from './types';
-import { MOCK_FIELDS } from './mock/fields';
+import type { Field, LogEntry, BoundingBox, LoadedFile } from './types';
 
 function InvoiceApp() {
   const { state, dispatch } = useAppState();
 
-  // Persist fields + log to localStorage keyed by file name+size
-  const handleRestore = useCallback(
-    (saved: { fields: Field[]; log: LogEntry[] }) => {
-      // Only restore if the saved session has the same field keys
-      const savedKeys = saved.fields.map((f) => f.key).join(',');
-      const currentKeys = state.fields.map((f) => f.key).join(',');
-      if (savedKeys === currentKeys) {
-        // Rehydrate fields individually via EDIT + APPROVE actions to avoid
-        // re-triggering log. Instead we directly restore via a synthetic reset
-        // by dispatching LOAD_FILE again and then patching would be complex;
-        // simplest safe approach: only restore if fields unchanged from mock.
-      }
-      // Restore custom fields and statuses
-      if (saved.fields.length >= MOCK_FIELDS.length) {
-        saved.fields.forEach((sf) => {
-          const existing = state.fields.find((f) => f.key === sf.key);
-          if (!existing && sf.isCustom) {
-            dispatch({
-              type: 'ADD_CUSTOM_FIELD',
-              payload: {
-                key: sf.key,
-                label: sf.label,
-                value: sf.value,
-                box: sf.box,
-              },
-            });
-          }
-        });
-      }
+  // Restore last session on mount
+  const handleRestoreLastSession = useCallback(
+    (file: LoadedFile, saved: { fields: Field[]; log: LogEntry[] }) => {
+      dispatch({ type: 'LOAD_FILE', payload: file });
+      // Use a microtask so LOAD_FILE sets the file first, then we patch fields+log
+      queueMicrotask(() => {
+        dispatch({ type: 'RESTORE_SESSION', payload: { fields: saved.fields, log: saved.log } });
+      });
     },
-    [dispatch, state.fields],
+    [dispatch],
   );
 
-  useLocalStoragePersistence(state.file, state.fields, state.log, handleRestore);
+  useLocalStoragePersistence(state.file, state.fields, state.log, handleRestoreLastSession);
+
+  // Global Escape key → clear active field selection
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        dispatch({ type: 'SET_ACTIVE', payload: null });
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [dispatch]);
 
   const handleFileAccepted = useCallback(
     (file: File) => {
@@ -92,7 +81,7 @@ function InvoiceApp() {
     [dispatch],
   );
 
-  // No file uploaded yet — show upload screen
+  // No file loaded yet — show upload screen
   if (!state.file) {
     return (
       <UploadZone
@@ -103,7 +92,9 @@ function InvoiceApp() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
+    <div
+      className="min-h-screen bg-neutral-50 flex flex-col"
+    >
       {/* Sticky top toolbar */}
       <Toolbar
         fileName={state.file.name}
@@ -128,9 +119,11 @@ function InvoiceApp() {
             onSelectField={(key) =>
               dispatch({ type: 'SET_ACTIVE', payload: key })
             }
+            onClearSelection={() =>
+              dispatch({ type: 'SET_ACTIVE', payload: null })
+            }
             drawMode={state.drawMode}
           >
-            {/* DrawLayer is rendered inside DocumentViewer's page wrapper when drawMode is on */}
             {state.drawMode && (
               <DrawLayer
                 fields={state.fields}
