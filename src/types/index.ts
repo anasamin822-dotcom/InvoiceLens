@@ -43,4 +43,6 @@ export interface AppState {
   activeFieldKey: string | null;
   log: LogEntry[];
   drawMode: boolean;
+  /** True when a blob: URL was restored but the file bytes are no longer available */
+  contentUnavailable: boolean;
 }

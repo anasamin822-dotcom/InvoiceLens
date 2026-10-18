@@ -19,7 +19,8 @@ export type Action =
     }
   | { type: 'DELETE_CUSTOM_FIELD'; payload: { key: string } }
   | { type: 'UPDATE_BOX'; payload: { key: string; box: Field['box'] } }
-  | { type: 'RESTORE_SESSION'; payload: { fields: Field[]; log: LogEntry[] } };
+  | { type: 'RESTORE_SESSION'; payload: { fields: Field[]; log: LogEntry[] } }
+  | { type: 'SET_CONTENT_UNAVAILABLE' };
 
 // ---------------------------------------------------------------------------
 // Initial state
@@ -31,6 +32,7 @@ export const INITIAL_STATE: AppState = {
   activeFieldKey: null,
   log: [],
   drawMode: false,
+  contentUnavailable: false,
 };
 
 // ---------------------------------------------------------------------------
@@ -50,6 +52,7 @@ export function appReducer(state: AppState, action: Action): AppState {
         ...INITIAL_STATE,
         file: action.payload,
         fields: MOCK_FIELDS.map((f) => ({ ...f })),
+        contentUnavailable: false,
       };
     }
 
@@ -68,6 +71,7 @@ export function appReducer(state: AppState, action: Action): AppState {
         ...INITIAL_STATE,
         file: sampleFile,
         fields: MOCK_FIELDS.map((f) => ({ ...f })),
+        contentUnavailable: false,
       };
     }
 
@@ -190,6 +194,10 @@ export function appReducer(state: AppState, action: Action): AppState {
         fields: action.payload.fields,
         log: action.payload.log,
       };
+    }
+
+    case 'SET_CONTENT_UNAVAILABLE': {
+      return { ...state, contentUnavailable: true };
     }
 
     default:
