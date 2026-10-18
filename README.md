@@ -52,7 +52,7 @@ npm run test       # 62 unit tests via Vitest
   * **Non-blocking Toast:** Animated notification upon JSON export without blocking user interactions.
   * **Mobile Slide-down Sheet:** 44px+ accessible touch targets and collapsible audit log on mobile devices (320px–390px).
 * **Credits & Attributions:**
-  * 3D Icons: CC0 from [3dicons.co](https://3dicons.co) (optimized vector SVG under 60KB).
+  * 3D document & checkmark illustrations: hand-crafted original SVGs (no attribution required).
   * Design Patterns: Inspired by [Aceternity UI](https://ui.aceternity.com), [Refero Styles](https://refero.design), and [Footer.design](https://footer.design). Re-implemented with native React 19 + Tailwind CSS + CSS keyframes.
 
 ---

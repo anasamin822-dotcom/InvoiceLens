@@ -40,7 +40,7 @@ export function FieldPanel({
               <span className="tabular-nums font-medium text-neutral-700">{approvedCount}</span> of{' '}
               <span className="tabular-nums font-medium text-neutral-700">{total}</span> approved
               {editedCount > 0 && (
-                <span className="text-neutral-400"> &middot; {editedCount} edited</span>
+                <span className="text-neutral-500"> &middot; {editedCount} edited</span>
               )}
             </p>
           </div>

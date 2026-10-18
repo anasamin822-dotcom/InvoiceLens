@@ -141,7 +141,7 @@ export function UploadZone({ onFileAccepted, onLoadSample }: UploadZoneProps) {
             <p className="text-xs sm:text-sm text-neutral-500">
               or <span className="text-indigo-600 font-medium hover:underline underline-offset-2">browse files from computer</span>
             </p>
-            <p className="text-[11px] text-neutral-400 pt-1 font-mono">
+            <p className="text-[11px] text-neutral-500 pt-1 font-mono">
               PDF, PNG, JPG, or WEBP &middot; Up to 10 MB
             </p>
           </div>
@@ -184,7 +184,7 @@ export function UploadZone({ onFileAccepted, onLoadSample }: UploadZoneProps) {
           </svg>
           <span>Load sample pre-aligned invoice</span>
         </button>
-        <span className="text-[11px] text-neutral-400">
+        <span className="text-[11px] text-neutral-500">
           Try the demo document without uploading your own file
         </span>
       </div>

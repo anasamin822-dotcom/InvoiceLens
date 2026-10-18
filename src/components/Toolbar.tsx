@@ -73,19 +73,19 @@ export function Toolbar({
                 Invoice Review
               </h1>
               {/* Demo Mode Pill */}
-              <span className="hidden xs:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/70 shrink-0">
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/70 shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" aria-hidden="true" />
                 Demo mode
               </span>
             </div>
-            <p className="text-[11px] text-neutral-400 leading-none truncate hidden sm:block">
+            <p className="text-[11px] text-neutral-500 leading-none truncate hidden sm:block">
               Linear-style extraction &amp; audit
             </p>
           </div>
 
           {/* Active File Pill on desktop */}
           <div className="hidden lg:flex items-center gap-1.5 ml-2 px-2.5 py-1 rounded-md bg-neutral-100/80 border border-neutral-200/80 text-xs text-neutral-600 max-w-[200px]">
-            <span className="text-neutral-400 text-[10px] uppercase font-semibold">File</span>
+            <span className="text-neutral-500 text-[10px] uppercase font-semibold">File</span>
             <span className="font-medium text-neutral-800 truncate" title={fileName}>
               {fileName}
             </span>

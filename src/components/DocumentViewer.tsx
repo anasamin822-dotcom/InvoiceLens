@@ -85,7 +85,7 @@ export function DocumentViewer({
           <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
             <path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm8.75-2.75a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5zM8 11.5a1 1 0 100-2 1 1 0 000 2z" />
           </svg>
-          <span className="hidden xs:inline">Demo mode: mock extraction</span>
+          <span className="hidden sm:inline">Demo mode: mock extraction</span>
         </div>
       </div>
 
@@ -144,7 +144,7 @@ export function DocumentViewer({
               width: currentZoom === 1.0 ? '100%' : `${Math.round(currentZoom * 100)}%`,
               maxWidth: currentZoom === 1.0 ? '100%' : 'none',
             }}
-            className="relative inline-block bg-white rounded-lg overflow-hidden border border-neutral-200/90 transition-all duration-150"
+            className="relative inline-block bg-white rounded-lg overflow-hidden border border-neutral-200/90 transition-all duration-150 shrink-0"
             style-custom="shadow-paper"
             onClick={onClearSelection}
           >
@@ -160,7 +160,7 @@ export function DocumentViewer({
                 alt={file.name}
                 onLoad={() => setImageLoaded(true)}
                 className="block w-full h-auto object-contain select-none"
-                style={{ maxHeight: 'calc(100vh - 160px)' }}
+                style={{ maxHeight: currentZoom === 1.0 ? 'calc(100vh - 160px)' : 'none' }}
               />
             )}
 

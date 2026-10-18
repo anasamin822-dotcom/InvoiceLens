@@ -108,7 +108,7 @@ function InvoiceApp() {
               <strong className="text-neutral-700 font-semibold">Invoice Review</strong> &middot; Built for the Offset take-home
             </p>
             <p className="flex items-center gap-3">
-              <span className="text-neutral-400">Demo mode &middot; Mock extraction</span>
+              <span className="text-neutral-500">Demo mode &middot; Mock extraction</span>
               <a
                 href="https://github.com/anasamin822-dotcom/invoice-review"
                 target="_blank"
@@ -206,7 +206,7 @@ function InvoiceApp() {
             <strong className="text-neutral-800 font-semibold">Invoice Review</strong> &middot; Built for the Offset take-home
           </p>
           <p className="flex items-center gap-3">
-            <span className="text-neutral-400">Demo mode &middot; Mock extraction</span>
+            <span className="text-neutral-500">Demo mode &middot; Mock extraction</span>
             <a
               href="https://github.com/anasamin822-dotcom/invoice-review"
               target="_blank"

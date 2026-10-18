@@ -23,8 +23,8 @@ export function EditLog({ entries }: EditLogProps) {
   // Collapsed by default on mobile screens to preserve viewport space
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
 
-  // Newest events first
-  const sortedEntries = [...entries].reverse();
+  // Reducer prepends entries, so `entries` is already ordered newest-first
+  const sortedEntries = entries;
 
   return (
     <div className="flex flex-col bg-white border border-neutral-200/80 rounded-2xl p-4 shadow-2xs">
@@ -76,14 +76,14 @@ export function EditLog({ entries }: EditLogProps) {
       {/* Log entries list (always visible on desktop; collapsible on mobile) */}
       <div className={`mt-3 ${isMobileExpanded ? 'block' : 'hidden md:block'}`}>
         {sortedEntries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center text-neutral-400">
+          <div className="flex flex-col items-center justify-center py-8 text-center text-neutral-500">
             <div className="w-9 h-9 rounded-full bg-neutral-50 border border-neutral-200/60 flex items-center justify-center mb-2">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="text-neutral-300">
                 <path fillRule="evenodd" d="M3.75 2a.75.75 0 0 0-.75.75v10.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75V2.75a.75.75 0 0 0-.75-.75h-8.5Zm0-1.5h8.5A2.25 2.25 0 0 1 14.5 2.75v10.5A2.25 2.25 0 0 1 12.25 15h-8.5A2.25 2.25 0 0 1 1.5 12.75V2.75A2.25 2.25 0 0 1 3.75.5Z" />
               </svg>
             </div>
             <p className="text-xs font-medium text-neutral-600">No edits recorded</p>
-            <p className="text-[11px] text-neutral-400 mt-0.5">Approved or modified values will appear here.</p>
+            <p className="text-[11px] text-neutral-500 mt-0.5">Approved or modified values will appear here.</p>
           </div>
         ) : (
           <div className="relative pl-3.5 pr-1 max-h-[320px] overflow-y-auto space-y-3.5 before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-px before:bg-neutral-200">
@@ -104,7 +104,7 @@ export function EditLog({ entries }: EditLogProps) {
                 <div className="flex-1 min-w-0 bg-neutral-50/70 border border-neutral-100 rounded-lg p-2.5">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <span className="font-semibold text-neutral-800 truncate">{item.fieldLabel}</span>
-                    <span className="text-[10px] text-neutral-400 font-mono shrink-0 tabular-nums" title={formatTimestamp(item.timestamp)}>
+                    <span className="text-[10px] text-neutral-500 font-mono shrink-0 tabular-nums" title={formatTimestamp(item.timestamp)}>
                       {getRelativeTime(item.timestamp)}
                     </span>
                   </div>
@@ -117,8 +117,8 @@ export function EditLog({ entries }: EditLogProps) {
 
                   {item.type === 'edit' && (
                     <div className="space-y-0.5 text-[11px]">
-                      <div className="flex items-center gap-1.5 text-neutral-400">
-                        <span className="text-[9px] uppercase font-bold text-neutral-400">Old:</span>
+                      <div className="flex items-center gap-1.5 text-neutral-500">
+                        <span className="text-[9px] uppercase font-bold text-neutral-500">Old:</span>
                         <span className="line-through font-mono text-neutral-500 truncate tabular-nums">{item.oldValue}</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-neutral-800 font-semibold">

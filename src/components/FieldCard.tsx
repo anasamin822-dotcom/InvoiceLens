@@ -147,7 +147,7 @@ export function FieldCard({
                 e.stopPropagation();
                 onDeleteCustom(field.key);
               }}
-              className="p-1 text-neutral-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors cursor-pointer"
+              className="p-1 text-neutral-500 hover:text-red-600 rounded hover:bg-red-50 transition-colors cursor-pointer"
               title="Delete field"
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
@@ -232,7 +232,7 @@ export function FieldCard({
             className={[
               'flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all min-h-[44px]',
               field.status === 'approved'
-                ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
+                ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed'
                 : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/80 hover:border-emerald-300 cursor-pointer active:scale-[0.99]',
             ].join(' ')}
           >
