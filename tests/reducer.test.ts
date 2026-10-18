@@ -267,3 +267,42 @@ describe('appReducer — RESTORE_SESSION', () => {
   });
 });
 
+describe('appReducer — SET_CONTENT_UNAVAILABLE', () => {
+  it('sets contentUnavailable to true', () => {
+    const state = appReducer(INITIAL_STATE, { type: 'SET_CONTENT_UNAVAILABLE' });
+    expect(state.contentUnavailable).toBe(true);
+  });
+
+  it('preserves all other state slices', () => {
+    const withLog = appReducer(INITIAL_STATE, {
+      type: 'EDIT_FIELD',
+      payload: { key: 'invoiceNumber', newValue: 'INV-XXXX' },
+    });
+    const state = appReducer(withLog, { type: 'SET_CONTENT_UNAVAILABLE' });
+    expect(state.contentUnavailable).toBe(true);
+    expect(state.log).toHaveLength(1);
+    expect(state.fields.find((f) => f.key === 'invoiceNumber')?.value).toBe('INV-XXXX');
+  });
+
+  it('is cleared by LOAD_FILE', () => {
+    const unavailable = appReducer(INITIAL_STATE, { type: 'SET_CONTENT_UNAVAILABLE' });
+    expect(unavailable.contentUnavailable).toBe(true);
+    const loaded = appReducer(unavailable, {
+      type: 'LOAD_FILE',
+      payload: { name: 'new.pdf', url: 'blob:new', kind: 'pdf', size: 100 },
+    });
+    expect(loaded.contentUnavailable).toBe(false);
+  });
+
+  it('is cleared by LOAD_SAMPLE', () => {
+    const unavailable = appReducer(INITIAL_STATE, { type: 'SET_CONTENT_UNAVAILABLE' });
+    const loaded = appReducer(unavailable, { type: 'LOAD_SAMPLE' });
+    expect(loaded.contentUnavailable).toBe(false);
+  });
+
+  it('INITIAL_STATE has contentUnavailable = false', () => {
+    expect(INITIAL_STATE.contentUnavailable).toBe(false);
+  });
+});
+
+
