@@ -190,3 +190,80 @@ describe('appReducer — unknown action', () => {
     expect(result).toBe(INITIAL_STATE);
   });
 });
+
+describe('appReducer — RESTORE_SESSION', () => {
+  const savedFields = [
+    { key: 'invoiceNumber', label: 'Invoice Number', value: 'INV-9999', status: 'edited' as const, box: { x: 0.58, y: 0.08, w: 0.24, h: 0.04 } },
+    { key: 'invoiceDate',   label: 'Invoice Date',   value: '2027-01-01', status: 'approved' as const, box: { x: 0.58, y: 0.13, w: 0.24, h: 0.04 } },
+    { key: 'total',         label: 'Total Amount',   value: '99,999.00', status: 'pending' as const, box: { x: 0.58, y: 0.824, w: 0.24, h: 0.04 } },
+  ];
+  const savedLog = [
+    { id: 'a1', fieldKey: 'invoiceNumber', fieldLabel: 'Invoice Number', type: 'edit' as const, oldValue: 'INV-2041', newValue: 'INV-9999', timestamp: 1000 },
+    { id: 'a2', fieldKey: 'invoiceDate', fieldLabel: 'Invoice Date', type: 'approve' as const, timestamp: 999 },
+  ];
+
+  it('replaces fields and log atomically', () => {
+    // Start with a file already loaded
+    const withFile = appReducer(INITIAL_STATE, {
+      type: 'LOAD_FILE',
+      payload: { name: 'inv.pdf', url: 'blob:x', kind: 'pdf', size: 12345 },
+    });
+    const restored = appReducer(withFile, {
+      type: 'RESTORE_SESSION',
+      payload: { fields: savedFields, log: savedLog },
+    });
+
+    expect(restored.fields).toEqual(savedFields);
+    expect(restored.log).toEqual(savedLog);
+  });
+
+  it('preserves the current file reference', () => {
+    const filePayload = { name: 'inv.pdf', url: 'blob:x', kind: 'pdf' as const, size: 12345 };
+    const withFile = appReducer(INITIAL_STATE, { type: 'LOAD_FILE', payload: filePayload });
+    const restored = appReducer(withFile, {
+      type: 'RESTORE_SESSION',
+      payload: { fields: savedFields, log: savedLog },
+    });
+
+    expect(restored.file).toEqual(filePayload);
+  });
+
+  it('does not mutate drawMode or activeFieldKey', () => {
+    const withActive = { ...INITIAL_STATE, activeFieldKey: 'total', drawMode: true };
+    const restored = appReducer(withActive, {
+      type: 'RESTORE_SESSION',
+      payload: { fields: savedFields, log: savedLog },
+    });
+    // Restore preserves other state slices unchanged
+    expect(restored.activeFieldKey).toBe('total');
+    expect(restored.drawMode).toBe(true);
+  });
+
+  it('restores custom fields correctly', () => {
+    const customField = {
+      key: 'custom_abc',
+      label: 'Tax',
+      value: '500.00',
+      status: 'pending' as const,
+      box: { x: 0.1, y: 0.1, w: 0.2, h: 0.05 },
+      isCustom: true,
+    };
+    const restored = appReducer(INITIAL_STATE, {
+      type: 'RESTORE_SESSION',
+      payload: { fields: [...savedFields, customField], log: [] },
+    });
+    const found = restored.fields.find((f) => f.key === 'custom_abc');
+    expect(found?.isCustom).toBe(true);
+    expect(found?.value).toBe('500.00');
+  });
+
+  it('restores an empty log without error', () => {
+    const restored = appReducer(INITIAL_STATE, {
+      type: 'RESTORE_SESSION',
+      payload: { fields: savedFields, log: [] },
+    });
+    expect(restored.log).toHaveLength(0);
+    expect(restored.fields).toHaveLength(3);
+  });
+});
+
