@@ -70,7 +70,7 @@ export function Toolbar({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="text-xs sm:text-sm font-bold text-neutral-900 tracking-tight leading-tight truncate">
-                Invoice Review
+                InvoiceLens
               </h1>
               {/* Demo Mode Pill */}
               <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/70 shrink-0">

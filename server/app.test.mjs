@@ -1,0 +1,16 @@
+import test from 'node:test';import assert from 'node:assert/strict';import request from 'supertest';import {createApp} from './app.mjs';import {mkdtempSync,rmSync} from 'node:fs';import os from 'node:os';import path from 'node:path';
+const field={key:'invoiceNumber',label:'Invoice number',value:'INV-123',status:'pending',box:{x:.1,y:.1,w:.2,h:.04},page:1,source:'manual'};
+test('authenticated upload/review, isolation, conflict, validation, deletion and restart persistence',async()=>{
+ const dir=mkdtempSync(path.join(os.tmpdir(),'il-test-')),file=path.join(dir,'db.sqlite');let instance=createApp({database:file,allowRegistration:true});const a=request.agent(instance.app),b=request.agent(instance.app);
+ assert.equal((await a.get('/api/documents')).status,401);
+ const password='test-password-12345';assert.equal((await a.post('/api/auth/register').send({username:'alice',password})).status,200);assert.equal((await b.post('/api/auth/register').send({username:'bob',password})).status,200);
+ assert.equal((await a.post('/api/documents').attach('file',Buffer.from('<svg>fake</svg>'),'fake.png')).status,400);
+ const upload=await a.post('/api/documents').attach('file',Buffer.from('%PDF-1.7\ntest document'),'invoice.pdf');assert.equal(upload.status,201);const id=upload.body.document.id;
+ assert.equal((await b.get('/api/documents')).body.documents.length,0);assert.equal((await b.get(`/api/documents/${id}`)).status,404);assert.equal((await b.get(`/api/documents/${id}/file`)).status,404);assert.equal((await b.delete(`/api/documents/${id}`)).status,404);
+ const saved=await a.put(`/api/documents/${id}/review`).send({fields:[field],revision:0});assert.equal(saved.status,200);assert.equal(saved.body.document.log[0].type,'create');assert.equal(saved.body.document.revision,1);
+ assert.equal((await a.put(`/api/documents/${id}/review`).send({fields:[field],revision:0})).status,409);
+ assert.equal((await a.put(`/api/documents/${id}/review`).send({fields:[{...field,box:{x:.9,y:0,w:.5,h:.1}}],revision:1})).status,400);
+ assert.equal((await a.put(`/api/documents/${id}/review`).set('Origin','https://attacker.invalid').send({fields:[],revision:1})).status,403);
+ const approved=await a.put(`/api/documents/${id}/review`).send({fields:[{...field,status:'approved'}],revision:1});assert.equal(approved.body.document.log[0].type,'approve');
+ instance.db.close();instance=createApp({database:file,allowRegistration:false});const fresh=request.agent(instance.app);assert.equal((await fresh.post('/api/auth/register').send({username:'eve',password})).status,403);assert.equal((await fresh.post('/api/auth/login').send({username:'alice',password})).status,200);const restored=await fresh.get(`/api/documents/${id}`);assert.equal(restored.body.document.fields[0].value,'INV-123');assert.equal(restored.body.document.fields[0].status,'approved');assert.equal((await fresh.get(`/api/documents/${id}/file`)).status,200);assert.equal((await fresh.delete(`/api/documents/${id}`)).status,200);assert.equal((await fresh.get(`/api/documents/${id}`)).status,404);assert.equal((await fresh.post('/api/auth/logout')).status,200);assert.equal((await fresh.get('/api/documents')).status,401);instance.db.close();rmSync(dir,{recursive:true});
+});

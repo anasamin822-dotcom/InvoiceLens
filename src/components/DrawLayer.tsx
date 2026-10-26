@@ -109,7 +109,7 @@ export function DrawLayer({
         setError('Value is required.');
         return;
       }
-      const customKey = `custom_${Date.now()}`;
+      const customKey = `custom_${crypto.randomUUID()}`;
       onAddCustomField({
         key: customKey,
         label: customLabel.trim(),
@@ -135,7 +135,8 @@ export function DrawLayer({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      className="absolute inset-0 z-30 cursor-crosshair select-none bg-indigo-950/10"
+      onPointerCancel={() => { setIsDrawing(false); setCurrentRect(null); }}
+      className="absolute inset-0 z-30 cursor-crosshair select-none bg-indigo-950/10 touch-none"
       aria-label="Draw bounding box overlay"
     >
       {/* Instructions Banner */}
@@ -214,6 +215,8 @@ export function DrawLayer({
                   </label>
                   <input
                     type="text"
+                    aria-label="Field label"
+                    maxLength={100}
                     placeholder="e.g. Tax Amount, Vendor"
                     value={customLabel}
                     onChange={(e) => setCustomLabel(e.target.value)}
@@ -226,6 +229,8 @@ export function DrawLayer({
                   </label>
                   <input
                     type="text"
+                    aria-label="Extracted value"
+                    maxLength={2000}
                     placeholder="e.g. 1,420.00"
                     value={customValue}
                     onChange={(e) => setCustomValue(e.target.value)}

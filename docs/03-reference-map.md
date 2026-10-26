@@ -1,0 +1,3 @@
+# Reference Map
+
+Reviewed live references: https://www.scrolltide.co/ for scene reveal/mesh motion; https://www.navbar.gallery/style/design for compact navigation; https://footer.design/ for concise status footer; https://www.cta.gallery/ for one clear action; https://styles.refero.design/ for product tokens; https://supahero.io/ for asymmetric typography/hero; https://3dicons.co/ for dimensional materials. Aceternity https://ui.aceternity.com/components/3d-card-effect and /components/spotlight inform tilt/lighting. Patterns implemented originally, no paid template code copied. 3D scene is original procedural geometry, not claimed as a downloaded model.

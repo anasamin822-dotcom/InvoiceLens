@@ -10,6 +10,9 @@ export interface BoundingBox {
 }
 
 export interface Field {
+  page?: number;
+  source?: 'pdf-text' | 'ocr' | 'manual' | 'sample';
+  confidence?: number;
   key: FieldKey | string;
   label: string;
   value: string;

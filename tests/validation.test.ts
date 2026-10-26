@@ -54,6 +54,7 @@ describe('validateTotal', () => {
   it('fails number with 3 decimal places', () => {
     expect(validateTotal('48250.001').valid).toBe(false);
   });
+  it('rejects malformed grouping', () => { expect(validateTotal('1,2,3').valid).toBe(false); expect(validateTotal(',100').valid).toBe(false); });
   it('fails alpha string', () => {
     expect(validateTotal('abc').valid).toBe(false);
   });
