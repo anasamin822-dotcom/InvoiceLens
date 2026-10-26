@@ -1,4 +1,4 @@
-# Contributing to Invoice Review
+# Contributing to InvoiceLens
 
 Thank you for your interest in contributing!
 

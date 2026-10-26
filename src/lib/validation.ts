@@ -26,7 +26,7 @@ export function validateDate(value: string): ValidationResult {
   }
   // Verify month/day round-trip to catch overflow like 2026-02-30
   const [y, m, day] = trimmed.split('-').map(Number);
-  if (d.getFullYear() !== y || d.getMonth() + 1 !== m || d.getDate() !== day) {
+  if (d.getUTCFullYear() !== y || d.getUTCMonth() + 1 !== m || d.getUTCDate() !== day) {
     return { valid: false, error: 'Date is not a valid calendar date.' };
   }
   return { valid: true };
@@ -34,8 +34,8 @@ export function validateDate(value: string): ValidationResult {
 
 /** Total: valid number with optional commas and up to 2 decimal places. */
 export function validateTotal(value: string): ValidationResult {
-  const trimmed = value.trim().replace(/,/g, '');
-  const NUM_RE = /^\d+(\.\d{1,2})?$/;
+  const trimmed = value.trim();
+  const NUM_RE = /^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?$/;
   if (!NUM_RE.test(trimmed)) {
     return {
       valid: false,

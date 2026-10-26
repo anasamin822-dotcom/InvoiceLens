@@ -22,3 +22,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Private invoice data and secrets
+data/
+.env
+.env.*
+!.env.example
+playwright-report/
+test-results/
+
+public/ocr/

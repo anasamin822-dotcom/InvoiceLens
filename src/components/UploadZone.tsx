@@ -79,7 +79,7 @@ export function UploadZone({ onFileAccepted, onLoadSample }: UploadZoneProps) {
           <span className="w-2 h-2 rounded-full bg-indigo-600" aria-hidden="true" />
           <span>Interactive Document Extraction</span>
           <span className="text-neutral-300">|</span>
-          <span className="text-neutral-500">Offset Take-Home</span>
+          <span className="text-neutral-500">InvoiceLens Workspace</span>
         </div>
 
         <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-900 tracking-tight leading-tight">

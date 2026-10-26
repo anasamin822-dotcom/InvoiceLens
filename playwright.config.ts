@@ -1,0 +1,2 @@
+import {defineConfig} from '@playwright/test';
+export default defineConfig({testDir:'e2e',timeout:60000,use:{baseURL:'http://127.0.0.1:3101',trace:'retain-on-failure',launchOptions:{args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}},webServer:{command:'ALLOW_REGISTRATION=1 PORT=3101 DATABASE_PATH=/tmp/invoicelens-e2e.sqlite node server/start.mjs',url:'http://127.0.0.1:3101/api/health',reuseExistingServer:false}});
